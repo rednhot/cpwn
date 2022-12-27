@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "util.h"
 #include "common-defs.h"
 #include "tube.h"
@@ -329,6 +331,7 @@ cpwn_bytes_p cpwn_tube_recvuntil(cpwn_tube_p this, CSTR s, cpwn_flags flags)
 	ssize_t br;
 	cpwn_bytes_p res;
 	const char *p;
+	size_t s_len;
 	
 	if (this->read_closed)
 		return NULL;
@@ -339,6 +342,7 @@ cpwn_bytes_p cpwn_tube_recvuntil(cpwn_tube_p this, CSTR s, cpwn_flags flags)
 	}
 
 	res = cpwn_bytes_create();
+	s_len = strlen(s);
 	while (true)
 	{
 		br = read(this->fd_r, &c, 1);
@@ -360,7 +364,7 @@ cpwn_bytes_p cpwn_tube_recvuntil(cpwn_tube_p this, CSTR s, cpwn_flags flags)
 		} else {
 			cpwn_bytes_append_char(res, c);
 			/* one byte is read in */
-			if ((p = strstr(res->mem, s)))
+			if ((p = memmem(res->mem, res->length, s, s_len)))
 			{
 				if (flags & CPWN_FLAG_DROP)
 				{
